@@ -13,19 +13,9 @@ import java.time.LocalDate;
 @AllArgsConstructor
 public class StatusResponse {
     
-    public StatusResponse(String cpf2, UsuarioStatus status2, String nome2) {
-        cpf = cpf2;
-        status = status2;
-        nome = nome2;
-    }
 
-    private String nome;
-    
     private String cpf;
-    
-    private LocalDate dataNascimento;
-    
     private UsuarioStatus status;
-    
-    private Integer idade;
-}
+    private String nome;
+        
+    }

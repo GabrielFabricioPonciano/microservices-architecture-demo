@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class IdadeDto {
+public class IdadeCalculadaDto {
     String cpf;
 
     long idade;

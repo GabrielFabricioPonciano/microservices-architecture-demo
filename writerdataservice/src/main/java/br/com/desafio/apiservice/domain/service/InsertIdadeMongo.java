@@ -1,6 +1,6 @@
 package br.com.desafio.apiservice.domain.service;
 
-import br.com.desafio.apiservice.application.dto.IdadeDto;
+import br.com.desafio.apiservice.application.dto.IdadeCalculadaDto;
 import br.com.desafio.apiservice.domain.entity.IdadeDocument;
 import br.com.desafio.apiservice.domain.entity.UsuarioDocument;
 import br.com.desafio.apiservice.domain.entity.UsuarioStatus;
@@ -18,7 +18,7 @@ public class InsertIdadeMongo {
     private final UsuarioRepository usuarioRepository;
     private final IdadeRepository idadeRepository;
 
-    public void inserirIdade(IdadeDto idadeDto){
+    public void inserirIdade(IdadeCalculadaDto idadeDto){
         try {
             IdadeDocument doc = new IdadeDocument(idadeDto.getCpf(), idadeDto.getIdade());
             IdadeDocument salvo = idadeRepository.save(doc);

@@ -72,7 +72,7 @@ public class ResultController {
             @ApiResponse(responseCode = "200", description = "Lista de status retornada com sucesso"),
             @ApiResponse(responseCode = "400", description = "Parâmetros inválidos")
     })
-    public ResponseEntity<List<IdadeResponse>> obterTodosStatus(){
+    public ResponseEntity<List<IdadeResponse>> obterTodasIdades(){
 
 
         List<IdadeResponse> resultado = idadeService.findAllIdade();

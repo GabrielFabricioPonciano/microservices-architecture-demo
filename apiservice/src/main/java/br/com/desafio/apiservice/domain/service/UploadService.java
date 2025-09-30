@@ -19,46 +19,34 @@ import java.io.InputStream;
 /**
  * Serviço responsável por orquestrar o processo de upload e persistência
  * de dados de usuários a partir de um arquivo.
- * <p>
- * A sua responsabilidade é:
- * 1. Coordenar a leitura do arquivo usando uma classe utilitária.
- * 2. Aplicar a regra de negócio de não inserir CPFs duplicados.
- * 3. Persistir os novos usuários no banco de dados.
- * 4. Retornar um resumo completo da operação.
  */
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class UploadService {
-    
+
     private final UsuarioRepository usuarioRepository;
     private final FileProcessorUtil fileProcessorUtil;
 
-    /**
-     * Processa um arquivo, valida os seus dados e insere novos usuários no banco de dados.
-     *
-     * @param arquivo O {@link MultipartFile} enviado na requisição.
-     * @return Um {@link UploadResultResponse} com o resumo da operação.
-     * @throws IOException Se houver um erro irrecuperável na leitura do arquivo.
-     * @throws IllegalArgumentException Se o arquivo enviado estiver vazio.
-     */
     @Transactional
     public UploadResultResponse create(final MultipartFile arquivo) throws IOException {
-        
 
         if (arquivo == null || arquivo.isEmpty()) {
             throw new IllegalArgumentException("Arquivo não pode ser vazio ou nulo");
         }
-        
-        log.info("Iniciando processamento do arquivo: {}, tamanho: {} bytes", 
+
+        log.info("Iniciando processamento do arquivo: {}, tamanho: {} bytes",
                 arquivo.getOriginalFilename(), arquivo.getSize());
 
-        
-        ResultadoParseDTO resultadoParse = fileProcessorUtil.parse(arquivo.getInputStream());
+        final ResultadoParseDTO resultadoParse;
+        try (InputStream is = arquivo.getInputStream()) {
+            resultadoParse = fileProcessorUtil.parse(is);
+        }
+
         long inseridos = 0;
         long cpfsJaExistentes = 0;
 
-        log.info("Processando {} linhas válidas encontradas no arquivo", 
+        log.info("Processando {} linhas válidas encontradas no arquivo",
                 resultadoParse.getLinhasValidas().size());
 
         for (final LinhaProcessadaDto linhaDto : resultadoParse.getLinhasValidas()) {
@@ -73,7 +61,7 @@ public class UploadService {
             }
         }
 
-        log.info("Processamento de arquivo finalizado. Arquivo: {}, Novos usuários inseridos: {}, CPFs já existentes: {}", 
+        log.info("Processamento de arquivo finalizado. Arquivo: {}, Novos usuários inseridos: {}, CPFs já existentes: {}",
                 arquivo.getOriginalFilename(), inseridos, cpfsJaExistentes);
 
         return new UploadResultResponse(
@@ -85,18 +73,12 @@ public class UploadService {
         );
     }
 
-    /**
-     * Cria um UsuarioDocument a partir de uma linha processada.
-     *
-     * @param linhaDto Os dados processados da linha
-     * @return Um UsuarioDocument configurado
-     */
     private UsuarioDocument criarUsuarioDocument(final LinhaProcessadaDto linhaDto) {
         UsuarioDocument usuarioDocument = new UsuarioDocument();
         usuarioDocument.setNome(linhaDto.getNome());
         usuarioDocument.setCpf(linhaDto.getCpf());
         usuarioDocument.setDataNascimento(linhaDto.getDataNascimento());
-        usuarioDocument.setStatus(UsuarioStatus.Processamento); // Status inicial
+        usuarioDocument.setStatus(UsuarioStatus.Processamento);
         return usuarioDocument;
     }
 }
