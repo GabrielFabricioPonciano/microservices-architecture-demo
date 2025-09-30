@@ -1,6 +1,6 @@
 package br.com.desafio.apiservice.util;
 
-import br.com.desafio.apiservice.application.dto.LinhaDTO;
+import br.com.desafio.apiservice.application.dto.LinhaProcessadaDto;
 import br.com.desafio.apiservice.application.dto.ResultadoParseDTO;
 import org.springframework.stereotype.Component;
 
@@ -9,15 +9,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.time.format.ResolverStyle;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 /**
  * Utilitário para processar arquivos de texto contendo dados de usuários.
  * <p>
@@ -31,7 +28,7 @@ import java.util.Locale;
  * </ul>
  */
 @Component
-public class LerArquivoUtil {
+public class FileProcessorUtil {
     /**
      * Define o formato de data esperado ("dd/MM/yyyy") de forma estrita.
      * O `ResolverStyle.STRICT` garante que datas inválidas como "30/02/2023" sejam rejeitadas.
@@ -48,12 +45,12 @@ public class LerArquivoUtil {
      * @throws IOException Se ocorrer um erro de I/O irrecuperável durante a leitura do arquivo.
      */
     public ResultadoParseDTO parse(InputStream inputStream) throws IOException {
-       final List<LinhaDTO> linhasvalidas = new ArrayList<>();
+       final List<LinhaProcessadaDto> linhasvalidas = new ArrayList<>();
         long totalLidas = 0;
         long totalComErros = 0;
 
         // Usa 'try-with-resources' para garantir que o reader seja fechado automaticamente.
-        try(BufferedReader linhaatual = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))){;
+        try(BufferedReader linhaatual = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))){
          String linha;
             while ((linha = linhaatual.readLine()) != null) {
                 totalLidas++;
@@ -80,7 +77,7 @@ public class LerArquivoUtil {
                 try {
                     final LocalDate dataNascimento = LocalDate.parse(partes[2].trim(),FMT);
                     // Se todas as validações passaram, a linha é considerada válida.
-                    linhasvalidas.add(new LinhaDTO(nome,cpf,dataNascimento));
+                    linhasvalidas.add(new LinhaProcessadaDto(nome,cpf,dataNascimento));
                 }catch (DateTimeParseException e){
                     // A data estava num formato inválido ou era uma data impossível.
                     totalComErros++;

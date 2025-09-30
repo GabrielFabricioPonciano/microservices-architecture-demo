@@ -1,11 +1,12 @@
 package br.com.desafio.apiservice.domain.service;
 
-import br.com.desafio.apiservice.application.dto.LinhaDTO;
+import br.com.desafio.apiservice.application.dto.LinhaProcessadaDto;
 import br.com.desafio.apiservice.application.dto.ResultadoParseDTO;
-import br.com.desafio.apiservice.application.dto.UploadResultadoDTO;
+import br.com.desafio.apiservice.application.dto.UploadResultResponse;
 import br.com.desafio.apiservice.domain.entity.UsuarioDocument;
+import br.com.desafio.apiservice.domain.entity.UsuarioStatus;
 import br.com.desafio.apiservice.domain.repository.UsuarioRepository;
-import br.com.desafio.apiservice.util.LerArquivoUtil;
+import br.com.desafio.apiservice.util.FileProcessorUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -29,57 +30,73 @@ import java.io.InputStream;
 @RequiredArgsConstructor
 @Slf4j
 public class UploadService {
+    
     private final UsuarioRepository usuarioRepository;
-    private final LerArquivoUtil lerArquivoUtil;
+    private final FileProcessorUtil fileProcessorUtil;
 
     /**
      * Processa um arquivo, valida os seus dados e insere novos usuários no banco de dados.
      *
      * @param arquivo O {@link MultipartFile} enviado na requisição.
-     * @return Um {@link UploadResultadoDTO} com o resumo da operação.
-     * @throws IOException      Se houver um erro irrecuperável na leitura do arquivo.
+     * @return Um {@link UploadResultResponse} com o resumo da operação.
+     * @throws IOException Se houver um erro irrecuperável na leitura do arquivo.
      * @throws IllegalArgumentException Se o arquivo enviado estiver vazio.
      */
     @Transactional
-    public UploadResultadoDTO create(final MultipartFile arquivo) throws IOException{
-        // Passo 1: Validação de entrada
-        if (arquivo == null || arquivo.isEmpty()) throw new IllegalArgumentException("arquivo não pode ser vazio");
-        log.info("iniciando processamento do arquivo: {}",arquivo.getOriginalFilename());
+    public UploadResultResponse create(final MultipartFile arquivo) throws IOException {
+        
 
-        // Passo 2: Leitura e parsing do arquivo
-        final ResultadoParseDTO resultadoParse;
-        try(InputStream arquivoStream = arquivo.getInputStream()){
-            resultadoParse = lerArquivoUtil.parse(arquivoStream);
+        if (arquivo == null || arquivo.isEmpty()) {
+            throw new IllegalArgumentException("Arquivo não pode ser vazio ou nulo");
         }
+        
+        log.info("Iniciando processamento do arquivo: {}, tamanho: {} bytes", 
+                arquivo.getOriginalFilename(), arquivo.getSize());
 
+        
+        ResultadoParseDTO resultadoParse = fileProcessorUtil.parse(arquivo.getInputStream());
         long inseridos = 0;
-        long cpfjaexistentes = 0;
+        long cpfsJaExistentes = 0;
 
-        log.info("Processando {} linhas validas encontradas no arquivo: ", resultadoParse.getLinhasValidas().size());
+        log.info("Processando {} linhas válidas encontradas no arquivo", 
+                resultadoParse.getLinhasValidas().size());
 
-        // Passo 3: Lógica de persistência
-        for (final LinhaDTO linhaDTO: resultadoParse.getLinhasValidas()){
-            if (usuarioRepository.existsByCpf(linhaDTO.getCpf())){
-                cpfjaexistentes++;
+        for (final LinhaProcessadaDto linhaDto : resultadoParse.getLinhasValidas()) {
+            if (usuarioRepository.existsByCpf(linhaDto.getCpf())) {
+                cpfsJaExistentes++;
+                log.debug("CPF já existente: {}", linhaDto.getCpf());
             } else {
-                UsuarioDocument usuarioDocument = new UsuarioDocument();
-                usuarioDocument.setNome(linhaDTO.getNome());
-                usuarioDocument.setCpf(linhaDTO.getCpf());
-                usuarioDocument.setDataNascimento(linhaDTO.getDataNascimento());
+                UsuarioDocument usuarioDocument = criarUsuarioDocument(linhaDto);
                 usuarioRepository.save(usuarioDocument);
                 inseridos++;
+                log.debug("Usuário inserido: {} - CPF: {}", linhaDto.getNome(), linhaDto.getCpf());
             }
-
         }
 
-        log.info("Processamento de arquivo finalizado. Novos usuários inseridos: {}. CPFs já existentes: {}", inseridos, cpfjaexistentes);
+        log.info("Processamento de arquivo finalizado. Arquivo: {}, Novos usuários inseridos: {}, CPFs já existentes: {}", 
+                arquivo.getOriginalFilename(), inseridos, cpfsJaExistentes);
 
-        // Passo 4: Construção do DTO de resposta
-        return UploadResultadoDTO.builder()
-                .lidas(resultadoParse.getTotalLidas())
-                .inseridas(inseridos)
-                .cpfsJaExistentes(cpfjaexistentes)
-                .errosDeFormato(resultadoParse.getTotalComErros())
-                .build();
+        return new UploadResultResponse(
+                (int) resultadoParse.getTotalLidas(),
+                (int) inseridos,
+                (int) cpfsJaExistentes,
+                (int) resultadoParse.getTotalComErros(),
+                arquivo.getOriginalFilename()
+        );
+    }
+
+    /**
+     * Cria um UsuarioDocument a partir de uma linha processada.
+     *
+     * @param linhaDto Os dados processados da linha
+     * @return Um UsuarioDocument configurado
+     */
+    private UsuarioDocument criarUsuarioDocument(final LinhaProcessadaDto linhaDto) {
+        UsuarioDocument usuarioDocument = new UsuarioDocument();
+        usuarioDocument.setNome(linhaDto.getNome());
+        usuarioDocument.setCpf(linhaDto.getCpf());
+        usuarioDocument.setDataNascimento(linhaDto.getDataNascimento());
+        usuarioDocument.setStatus(UsuarioStatus.Processamento); // Status inicial
+        return usuarioDocument;
     }
 }

@@ -1,17 +1,17 @@
 package br.com.desafio.apiservice.domain.service;
-
-import br.com.desafio.apiservice.application.dto.StatusDTO;
-import br.com.desafio.apiservice.config.UsuarioNaoEncontradoException;
+import br.com.desafio.apiservice.application.handler.*;
+import br.com.desafio.apiservice.application.dto.StatusResponse;
+import br.com.desafio.apiservice.application.exception.UsuarioNaoEncontradoException;
 import br.com.desafio.apiservice.domain.entity.UsuarioDocument;
 import br.com.desafio.apiservice.domain.entity.UsuarioStatus;
 import br.com.desafio.apiservice.domain.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class StatusService {
@@ -21,23 +21,28 @@ public class StatusService {
     /**
      * Busca o status de um usuário pelo seu CPF.
      *
-     * @param cpf O CPF do usuário a ser consultado.
-     * @return um {@link StatusDTO} contendo o CPF e o status do usuário.
+     * @param cpf O CPF do usuário a ser consultado (normalizado).
+     * @return um {@link StatusResponse} contendo os dados completos do usuário.
      * @throws UsuarioNaoEncontradoException se nenhum usuário for encontrado com o CPF fornecido.
      */
-    public StatusDTO findStatusByCpf(final String cpf) {
+    public StatusResponse findStatusByCpf(final String cpf) {
+        log.debug("Buscando usuário por CPF: {}", cpf);
+        
         return usuarioRepository.findByCpf(cpf)
-                .map(usuario -> new StatusDTO(usuario.getCpf(), usuario.getStatus(), usuario.getNome()))
-                .orElseThrow(() -> new UsuarioNaoEncontradoException("Usuário com CPF " + cpf + " não encontrado."));
+                .map(this::converterParaStatusResponse)
+                .orElseThrow(() -> {
+                    log.warn("Usuário não encontrado para CPF: {}", cpf);
+                    return new UsuarioNaoEncontradoException("Usuário com CPF " + cpf + " não encontrado.");
+                });
     }
 
     /**
      * Retorna uma lista com o status de todos os usuários, opcionalmente filtrada por status.
      *
      * @param statusFilter O status para filtrar a busca. Se for nulo, todos os usuários são retornados.
-     * @return Uma lista de {@link StatusDTO}.
+     * @return Uma lista de {@link StatusResponse}.
      */
-    public List<StatusDTO> findAll(final UsuarioStatus statusFilter) {
+    public List<StatusResponse> findAll(final UsuarioStatus statusFilter) {
 
         List<UsuarioDocument> usuariosEncontrados;
 
@@ -48,6 +53,11 @@ public class StatusService {
         }
 
         return usuariosEncontrados.stream()
-                .map(usuario -> new StatusDTO(usuario.getCpf(),usuario.getStatus(),usuario.getNome()))
+                .map(usuario -> new StatusResponse(usuario.getCpf(),usuario.getStatus(),usuario.getNome()))
                 .collect(Collectors.toList());
-}}
+    }
+
+    private StatusResponse converterParaStatusResponse(UsuarioDocument usuario) {
+        return new StatusResponse(usuario.getCpf(), usuario.getStatus(), usuario.getNome());
+    }
+}

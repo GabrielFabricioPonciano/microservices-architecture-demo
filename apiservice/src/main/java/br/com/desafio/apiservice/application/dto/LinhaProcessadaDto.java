@@ -1,31 +1,20 @@
 package br.com.desafio.apiservice.application.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
 import java.time.LocalDate;
 
-/**
- * DTO que representa os dados de uma única linha válida extraída do arquivo de upload.
- */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class LinhaDTO {
+public class LinhaProcessadaDto {
 
-    /**
-     * Nome completo do usuário.
-     */
     private String nome;
 
-    /**
-     * CPF normalizado (apenas dígitos) do usuário.
-     */
     private String cpf;
 
-    /**
-     * Data de nascimento do usuário.
-     */
     private LocalDate dataNascimento;
 }

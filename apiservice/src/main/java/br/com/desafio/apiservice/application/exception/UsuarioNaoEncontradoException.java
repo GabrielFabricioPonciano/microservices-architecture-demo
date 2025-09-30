@@ -1,4 +1,4 @@
-package br.com.desafio.apiservice.config;
+package br.com.desafio.apiservice.application.exception;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;

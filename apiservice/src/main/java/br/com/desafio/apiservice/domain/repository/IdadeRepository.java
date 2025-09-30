@@ -14,6 +14,6 @@ import java.util.List;
 
 @Repository
 public interface IdadeRepository extends MongoRepository<IdadeDocument, String> {
-    @Override
+
     List<IdadeDocument> findAll();
 }
