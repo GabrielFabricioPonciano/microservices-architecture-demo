@@ -66,7 +66,7 @@ public class StatusController {
     @GetMapping
     @Operation(
         summary = "Lista o status de todos os usuários", 
-        description = "Permite filtrar os resultados por status. Se nenhum filtro for fornecido, retorna todos os usuários."
+        description = "Retorna lista de usuários. Se não especificar o filtro 'status', retorna TODOS os usuários (Processamento + Finalizado). Para filtrar, use: Processamento ou Finalizado"
     )
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Lista de status retornada com sucesso"),
@@ -74,16 +74,35 @@ public class StatusController {
     })
     public ResponseEntity<List<StatusResponse>> obterTodosStatus(
             @Parameter(
-                description = "Filtro opcional por status", 
-                example = "PROCESSAMENTO"
+                description = "Filtro OPCIONAL por status. Deixe vazio para retornar TODOS. Valores possíveis: Processamento, Finalizado", 
+                example = "Processamento",
+                required = false
             )
-            @RequestParam(required = false) UsuarioStatus usuarioStatus) {
+            @RequestParam(value = "status", required = false) String statusParam) {
         
-        log.info("Listando usuários com filtro de status: {}", usuarioStatus);
+        UsuarioStatus usuarioStatus = null;
+        if (statusParam != null && !statusParam.trim().isEmpty()) {
+            try {
+                usuarioStatus = UsuarioStatus.valueOf(statusParam.trim());
+            } catch (IllegalArgumentException e) {
+                log.warn("Status inválido fornecido: {}", statusParam);
+                throw new IllegalArgumentException("Status inválido. Valores aceitos: Processamento, Finalizado");
+            }
+        }
+        
+        if (usuarioStatus != null) {
+            log.info("Listando usuários filtrados por status: {}", usuarioStatus);
+        } else {
+            log.info("Listando TODOS os usuários (sem filtro de status)");
+        }
         
         List<StatusResponse> resultado = statusService.findAll(usuarioStatus);
         
-        log.info("Encontrados {} usuários", resultado.size());
+        if (usuarioStatus != null) {
+            log.info("Encontrados {} usuários com status: {}", resultado.size(), usuarioStatus);
+        } else {
+            log.info("Encontrados {} usuários no total", resultado.size());
+        }
         return ResponseEntity.ok(resultado);
     }
 }

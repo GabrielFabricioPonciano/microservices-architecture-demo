@@ -1,6 +1,6 @@
 package br.com.desafio.apiservice.domain.service;
 
-import br.com.desafio.apiservice.application.dto.IdadeCalculadaDto;
+import br.com.desafio.apiservice.application.dto.IdadeCalculadaDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -15,7 +15,7 @@ public class ConsumerServiceKafka {
 
 
     @KafkaListener(topics = "${kafka.topic.name}", groupId = "${spring.kafka.consumer.group-id}")
-    public void consumir(IdadeCalculadaDto mensagem){
+    public void consumir(IdadeCalculadaDTO mensagem){
         if (mensagem ==null){
             log.warn("mensagem nula recebida ignorando");
             return;
