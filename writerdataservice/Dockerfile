@@ -28,7 +28,6 @@ WORKDIR /app
 COPY --from=builder /app/target/*.jar app.jar
 
 # Expõe a porta que a aplicação usa.
-# Mude este valor para cada serviço!
 EXPOSE 8084
 
 # Comando para iniciar a aplicação.
