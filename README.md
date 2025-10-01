@@ -1,49 +1,94 @@
-# Microsserviços - Processamento de Usuários
+# Microserviços - Sistema de Processamento# Microsserviços - Processamento de Usuários
 
-Sistema de 3 microsserviços em Java/Spring Boot com Kafka e MongoDB - **AMBIENTE COMPLETAMENTE DOCKERIZADO**.
 
-## 🚀 Como Executar
 
-### **No WSL/Linux (RECOMENDADO)**
+Sistema com 3 microserviços Java + Spring Boot + Kafka + MongoDB.Sistema de 3 microsserviços em Java/Spring Boot com Kafka e MongoDB - **AMBIENTE COMPLETAMENTE DOCKERIZADO**.
 
-#### Opção 1: Script Automático
+
+
+## 🚀 Como Usar## 🚀 Como Executar
+
+
+
+### WSL/Linux (Recomendado)### **No WSL/Linux (RECOMENDADO)**
+
 ```bash
-# Dar permissão de execução
+
+# Copiar para WSL#### Opção 1: Script Automático
+
+cp -r /mnt/d/Users/Gabriel/Desktop/microservices ~/microservices```bash
+
+cd ~/microservices# Dar permissão de execução
+
 chmod +x start.sh stop.sh
 
-# Compila tudo e sobe o ambiente completo
-./start.sh
-```
+# Dar permissões e subir
 
-#### Opção 2: Manual no WSL
-```bash
-# 1. Compilar todos os JARs
-cd apiservice && ./mvnw clean package -DskipTests && cd ..
+chmod +x start.sh stop.sh# Compila tudo e sobe o ambiente completo
+
+./start.sh./start.sh
+
+``````
+
+
+
+### Windows (Sem Docker)#### Opção 2: Manual no WSL
+
+```batch```bash
+
+start.bat# 1. Compilar todos os JARs
+
+```cd apiservice && ./mvnw clean package -DskipTests && cd ..
+
 cd searchprocesservice && ./mvnw clean package -DskipTests && cd ..
-cd writerdataservice && ./mvnw clean package -DskipTests && cd ..
 
-# 2. Subir ambiente completo
-docker-compose up --build -d
-```
+## 📱 URLs Principaiscd writerdataservice && ./mvnw clean package -DskipTests && cd ..
 
-### **No Windows (Sem Docker)**
 
-#### Opção 1: Script Automático
-```batch
-# Apenas compila os JARs (não sobe Docker)
+
+- **API + Swagger**: http://localhost:8080/swagger-ui.html# 2. Subir ambiente completo
+
+- **Mongo Express**: http://localhost:8081 (admin/admin)docker-compose up --build -d
+
+- **Kafka UI**: http://localhost:8082```
+
+
+
+## 🔄 Fluxo### **No Windows (Sem Docker)**
+
+
+
+1. Upload arquivo → usuários salvos com status "Processamento"#### Opção 1: Script Automático
+
+2. Job (5min) → calcula idades → publica no Kafka```batch
+
+3. Consumer → salva idades → status "Finalizado"# Apenas compila os JARs (não sobe Docker)
+
 start.bat
+
+## 📝 Formato do Arquivo```
+
 ```
 
-#### Opção 2: Manual no Windows
-```batch
-# Compilar cada microserviço
+João Silva - 12345678901 - 15/05/1990#### Opção 2: Manual no Windows
+
+Maria Santos - 98765432100 - 25/12/1985```batch
+
+```# Compilar cada microserviço
+
 cd apiservice && call mvnw.cmd clean package -DskipTests && cd ..
-cd searchprocesservice && call mvnw.cmd clean package -DskipTests && cd ..
-cd writerdataservice && call mvnw.cmd clean package -DskipTests && cd ..
 
-# Subir infraestrutura separadamente (MongoDB e Kafka)
-# Usar arquivo "docker-compose.yml" apenas com infra
-```
+## 🛑 Pararcd searchprocesservice && call mvnw.cmd clean package -DskipTests && cd ..
+
+```bashcd writerdataservice && call mvnw.cmd clean package -DskipTests && cd ..
+
+./stop.sh
+
+# ou# Subir infraestrutura separadamente (MongoDB e Kafka)
+
+docker-compose down# Usar arquivo "docker-compose.yml" apenas com infra
+
+``````
 
 ### Para parar tudo:
 ```bash
